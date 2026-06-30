@@ -13,7 +13,7 @@ func main() {
     if err := godotenv.Load(); err != nil {
         log.Println("Предупреждение: файл .env не найден")
     }
-	_, err := app.InitDB(
+	db, err := app.InitDB(
 		os.Getenv("POSTGRES_USER"),
 		os.Getenv("POSTGRES_PASSWORD"),
 		os.Getenv("POSTGRES_DB"),
@@ -23,6 +23,8 @@ func main() {
 	if err != nil{
 		log.Fatal("Failed to connect to DB", err)
 	}
+
+	app.UserRouter(db)
 
 	serverPort := ":8080"
 	log.Printf("Сервер успешно запущен на порту %s...", serverPort)

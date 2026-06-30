@@ -4,6 +4,10 @@ import (
 	"fmt"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+
+	"github.com/Ania-Krivs/GOTracker/internal/repository"
+	"github.com/Ania-Krivs/GOTracker/internal/services"
+	"github.com/Ania-Krivs/GOTracker/internal/transport/http"
 )
 
 func InitDB(user, password, name, host, port string) (*gorm.DB, error) {
@@ -12,4 +16,11 @@ func InitDB(user, password, name, host, port string) (*gorm.DB, error) {
 	)
 	
 	return gorm.Open(postgres.Open(dsn), &gorm.Config{})
+}
+
+func UserRouter(db *gorm.DB) {
+	userRepo := repository.NewUserRepository(db)
+	userService := services.NewUserService(userRepo)
+	userHandler := http.NewHandler(userService)
+	userHandler.InitRoutes()
 }
