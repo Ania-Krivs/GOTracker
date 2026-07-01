@@ -35,6 +35,10 @@ func InitRouters(db *gorm.DB) {
 
 	http.PingRouter()
 
+	notificationService := services.NewNotificationService()
+	wsHandler := http.NewWSHandler(notificationService)
+	wsHandler.MessageRourer()
+
 	netHttp.HandleFunc("/swagger/", httpSwagger.Handler(
 		httpSwagger.URL("http://localhost:8080/swagger/doc.json"),
 	))
