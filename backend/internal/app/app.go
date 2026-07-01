@@ -2,12 +2,15 @@ package app
 
 import (
 	"fmt"
+	netHttp "net/http"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
 	"github.com/Ania-Krivs/GOTracker/internal/repository"
 	"github.com/Ania-Krivs/GOTracker/internal/services"
 	"github.com/Ania-Krivs/GOTracker/internal/transport/http"
+
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 func InitDB(user, password, name, host, port string) (*gorm.DB, error) {
@@ -18,9 +21,18 @@ func InitDB(user, password, name, host, port string) (*gorm.DB, error) {
 	return gorm.Open(postgres.Open(dsn), &gorm.Config{})
 }
 
-func UserRouter(db *gorm.DB) {
+
+func InitRouters(db *gorm.DB) {
 	userRepo := repository.NewUserRepository(db)
 	userService := services.NewUserService(userRepo)
 	userHandler := http.NewHandler(userService)
-	userHandler.InitRoutes()
+	userHandler.UserRouter()
+
+	http.PingRouter()
+
+	netHttp.HandleFunc("/swagger/", httpSwagger.Handler(
+		httpSwagger.URL("http://localhost:8080/swagger/doc.json"),
+	))
+
 }
+

@@ -7,8 +7,19 @@ import (
 
 	"github.com/Ania-Krivs/GOTracker/internal/app"
 	"github.com/joho/godotenv"
+
+	_ "github.com/Ania-Krivs/GOTracker/docs"
 )
 
+// @title           GoTracker API
+// @version         1.0
+// @description     Сервис трекинга на Golang.
+// @termsOfService  http://swagger.io/terms/
+
+// @license.name  MIT
+
+// @host      localhost:8080
+// @BasePath  /
 func main() {
     if err := godotenv.Load(); err != nil {
         log.Println("Предупреждение: файл .env не найден")
@@ -24,7 +35,7 @@ func main() {
 		log.Fatal("Failed to connect to DB", err)
 	}
 
-	app.UserRouter(db)
+	app.InitRouters(db)
 
 	serverPort := ":8080"
 	log.Printf("Сервер успешно запущен на порту %s...", serverPort)

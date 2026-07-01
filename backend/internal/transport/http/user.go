@@ -14,10 +14,18 @@ func NewHandler(userService services.UserService) *Handler {
 	return &Handler{userService: userService}
 }
 
-func (h *Handler) InitRoutes() {
+func (h *Handler) UserRouter() {
 	http.HandleFunc("/users", h.GetAllUsers)
 }
 
+// GetAllUsers godoc
+// @Summary      Получить всех пользователей
+// @Description  Возвращает список всех пользователей из базы данных
+// @Tags         users
+// @Produce      json
+// @Success      200  {array}   models.User  "Успешный ответ со списком пользователей"
+// @Failure      500  {object}  map[string]string "Внутренняя ошибка сервера"
+// @Router       /users [get]
 func (h *Handler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)

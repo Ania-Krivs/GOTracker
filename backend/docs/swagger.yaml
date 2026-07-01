@@ -1,0 +1,63 @@
+basePath: /
+definitions:
+  models.User:
+    properties:
+      admin_id:
+        type: integer
+      code:
+        type: integer
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: Сервис трекинга на Golang.
+  license:
+    name: MIT
+  termsOfService: http://swagger.io/terms/
+  title: GoTracker API
+  version: "1.0"
+paths:
+  /ping:
+    get:
+      description: Возвращает текстовый ответ "pong", если сервис успешно запущен
+        и принимает запросы
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: pong
+          schema:
+            type: string
+        "405":
+          description: Method Not Allowed
+          schema:
+            type: string
+      summary: Проверка работоспособности (Healthcheck)
+      tags:
+      - system
+  /users:
+    get:
+      description: Возвращает список всех пользователей из базы данных
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Успешный ответ со списком пользователей
+          schema:
+            items:
+              $ref: '#/definitions/models.User'
+            type: array
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получить всех пользователей
+      tags:
+      - users
+swagger: "2.0"
