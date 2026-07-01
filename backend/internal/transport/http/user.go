@@ -3,6 +3,8 @@ package http
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/Ania-Krivs/GOTracker/internal/schemas"
 	"github.com/Ania-Krivs/GOTracker/internal/services"
 )
 
@@ -16,6 +18,7 @@ func NewHandler(userService services.UserService) *Handler {
 
 func (h *Handler) UserRouter() {
 	http.HandleFunc("/users", h.GetAllUsers)
+	http.HandleFunc("/users/", h.CreateUser)
 }
 
 // GetAllUsers godoc
@@ -43,4 +46,40 @@ func (h *Handler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(users)
+}
+
+// CreateUser godoc
+// @Summary      Создание пользователя админом
+// @Description  Принимает данные нового пользователя, привязывает к существующему админу и возвращает созданный объект
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Param        input body     schemas.CreateUser true  "Данные пользователя (передай name и admin_id)"
+// @Success      201   {object} models.User       "Пользователь успешно создан"
+// @Failure      400   {object} map[string]string "Неверный формат JSON или админ не найден"
+// @Failure      500   {object} map[string]string "Внутренняя ошибка сервера"
+// @Router       /users/ [post]
+func (h *Handler) CreateUser(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	var input schemas.CreateUser
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": "Неверный формат JSON тела запроса"})
+		return
+	}
+
+	user, err := h.userService.CreateUser(r.Context(), &input)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	_ = json.NewEncoder(w).Encode(user)
 }

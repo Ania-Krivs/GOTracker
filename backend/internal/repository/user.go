@@ -9,6 +9,8 @@ import (
 
 type UserRepository interface {
 	GetAll(ctx context.Context) ([]models.User, error)
+	Create(ctx context.Context, user *models.User) error
+	CodeExists(ctx context.Context, code uint) (bool, error)
 }
 
 type userRepository struct {
@@ -25,4 +27,15 @@ func (r *userRepository) GetAll(ctx context.Context) ([]models.User, error) {
 		return nil, err
 	}
 	return users, nil
+}
+
+func (r *userRepository) Create(ctx context.Context, user *models.User) error {
+
+	return r.db.WithContext(ctx).Create(user).Error
+}
+
+func (r *userRepository) CodeExists(ctx context.Context, code uint) (bool, error) {
+	var count int64
+	err := r.db.WithContext(ctx).Model(&models.User{}).Where("code = ?", code).Count(&count).Error
+	return count > 0, err
 }

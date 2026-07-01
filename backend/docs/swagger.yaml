@@ -1,5 +1,18 @@
 basePath: /
 definitions:
+  models.Admin:
+    properties:
+      email:
+        type: string
+      employees:
+        items:
+          $ref: '#/definitions/models.User'
+        type: array
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
   models.User:
     properties:
       admin_id:
@@ -11,16 +24,72 @@ definitions:
       name:
         type: string
     type: object
+  schemas.CreateAdminInput:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+  schemas.CreateUser:
+    properties:
+      admin_id:
+        type: integer
+      name:
+        type: string
+    required:
+    - admin_id
+    - name
+    type: object
 host: localhost:8080
 info:
   contact: {}
   description: Сервис трекинга на Golang.
-  license:
-    name: MIT
   termsOfService: http://swagger.io/terms/
   title: GoTracker API
   version: "1.0"
 paths:
+  /admin:
+    post:
+      consumes:
+      - application/json
+      description: Регистрирует администратора, хеширует его пароль и сохраняет в
+        БД
+      parameters:
+      - description: Данные для создания админа
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/schemas.CreateAdminInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Admin'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Создать нового администратора
+      tags:
+      - admin
   /ping:
     get:
       description: Возвращает текстовый ответ "pong", если сервис успешно запущен
@@ -58,6 +127,41 @@ paths:
               type: string
             type: object
       summary: Получить всех пользователей
+      tags:
+      - users
+  /users/:
+    post:
+      consumes:
+      - application/json
+      description: Принимает данные нового пользователя, привязывает к существующему
+        админу и возвращает созданный объект
+      parameters:
+      - description: Данные пользователя (передай name и admin_id)
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/schemas.CreateUser'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Пользователь успешно создан
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Неверный формат JSON или админ не найден
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Создание пользователя админом
       tags:
       - users
 swagger: "2.0"

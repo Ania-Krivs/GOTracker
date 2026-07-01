@@ -1,6 +1,5 @@
 package models
 
-// TODO: остальные поля
 type User struct {
 	ID string `gorm:"primaryKey;column:id"`
 	Name string `gorm:"column:name"`

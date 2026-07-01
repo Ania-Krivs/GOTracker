@@ -23,8 +23,13 @@ func InitDB(user, password, name, host, port string) (*gorm.DB, error) {
 
 
 func InitRouters(db *gorm.DB) {
+	adminRepo := repository.NewAdminRepository(db)
+	adminService := services.NewAdminService(adminRepo)
+	adminHandler := http.NewAdminHandler(adminService)
+	adminHandler.AdminRouter()
+	
 	userRepo := repository.NewUserRepository(db)
-	userService := services.NewUserService(userRepo)
+	userService := services.NewUserService(userRepo, adminRepo)
 	userHandler := http.NewHandler(userService)
 	userHandler.UserRouter()
 

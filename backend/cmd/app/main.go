@@ -15,9 +15,6 @@ import (
 // @version         1.0
 // @description     Сервис трекинга на Golang.
 // @termsOfService  http://swagger.io/terms/
-
-// @license.name  MIT
-
 // @host      localhost:8080
 // @BasePath  /
 func main() {
