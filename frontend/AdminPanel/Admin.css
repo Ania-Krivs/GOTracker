@@ -1,0 +1,23 @@
+#Add {
+    justify-content: right;
+    height: 40px;
+    margin-left: 10px;
+    margin-top: 10px;
+}
+#Min {
+    width: 20px;}
+.box {
+    margin-top: 10px;
+    display: flex;
+    width: 330px;
+    height: 20px;
+    padding: 20px 20px;
+    border: 2px solid hotpink;
+    justify-content: space-between;
+}
+.container {
+    display: flex;
+    border: 2px solid;
+    padding: 10px 10px;
+    height: 500px;
+}
