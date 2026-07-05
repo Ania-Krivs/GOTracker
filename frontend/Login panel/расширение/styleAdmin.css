@@ -1,0 +1,82 @@
+body {
+    font-family: "Roboto", sans-serif;
+    width: 400px;
+    height: auto;
+    margin: 20px;
+    padding: 20px;
+    background-image: url("bg.png");
+    background-size: cover;
+    background-position: center;
+}
+
+#title_A {
+    font-family: "Roboto", sans-serif;
+    font-weight: 700;
+    font-size: 40px;
+    margin-bottom: 40px;
+
+}
+
+button {
+    font-weight: 600;
+    font-family: "Roboto", sans-serif;
+    width: 100%;
+    height: 56px;
+    font-size: 20px;
+    margin-bottom: 40px;
+    background-color:floralwhite;
+    border: none;
+    border-radius: 16px;                /* Скругление кнопки */
+    cursor: pointer;                   /* Курсор-палец при наведении */
+    transition: 0.5s;                  /* Плавная анимация изменений */
+}
+
+button:hover {
+    background-color: rgb(203, 148, 255);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0,0,0,.2);
+}
+
+input {
+    width: 100%;
+    height: 52px;
+
+    margin-bottom: 18px;
+    padding: 0 18px;
+
+    font-size: 16px;
+    font-family: Roboto, sans-serif;
+
+    color: #222;
+
+    background: rgba(255,255,255,.35);
+
+    backdrop-filter: blur(12px);
+
+    border: 1px solid rgba(255,255,255,.4);
+
+    border-radius: 16px;
+
+    outline: none;
+
+    transition: .25s;
+}
+
+input::placeholder {
+    color: rgba(0,0,0,.45);
+}
+
+input:focus {
+    background: rgba(255,255,255,.65);
+
+    border-color: white;
+
+    box-shadow:
+        0 0 0 4px rgba(255,255,255,.15);
+
+    transform: scale(1.02);
+}
+
+input:hover {
+    background: rgba(255,255,255,.45);
+}
