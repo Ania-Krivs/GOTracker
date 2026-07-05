@@ -1,0 +1,34 @@
+{
+  "manifest_version": 3,
+  "name": "Duck Tracker Extension",
+  "version": "1.0",
+  "description": "Расширение с гусем, логином и админ-панелью.",
+  
+  "permissions": [
+    "activeTab",
+    "storage"
+  ],
+
+  "action": {
+    "default_popup": "LogIn/popup.html"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "css": ["Duck/style.css"],
+      "js": ["Duck/script.js"]
+    }
+  ],
+
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "quack.mp3",
+        "LogIn/bg.png",
+        "LogIn/abstract-flow-background_.png"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
