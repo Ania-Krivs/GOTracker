@@ -19,6 +19,8 @@ func NewHandler(userService services.UserService) *Handler {
 func (h *Handler) UserRouter() {
 	http.HandleFunc("/users", h.GetAllUsers)
 	http.HandleFunc("/users/", h.CreateUser)
+	http.HandleFunc("/users/login", h.UserLogIn)
+
 }
 
 // GetAllUsers godoc
@@ -81,5 +83,41 @@ func (h *Handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
+	_ = json.NewEncoder(w).Encode(user)
+}
+
+// UserLogIn godoc
+// @Summary      Вход пользователя по коду от администратора
+// @Description  Принимает код входа, проверяет его и возвращает данные пользователя для последующего WS-подключения
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Param        input body      schemas.LoginByCode true  "Код входа пользователя"
+// @Success      200   {object}  models.User                "Пользователь успешно вошёл"
+// @Failure      400   {object}  map[string]string          "Неверный формат JSON или пользователь не найден"
+// @Failure      500   {object}  map[string]string          "Внутренняя ошибка сервера"
+// @Router       /users/login [post]
+func (h *Handler) UserLogIn(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+
+	var input schemas.LoginByCode
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": "Неверный формат JSON тела запроса"})
+		return
+	}
+
+	user, err := h.userService.LoginByCode(r.Context(), input.Code)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(user)
 }

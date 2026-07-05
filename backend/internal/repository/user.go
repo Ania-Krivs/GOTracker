@@ -7,10 +7,13 @@ import (
 )
 
 
+// replace in service (best practice)
 type UserRepository interface {
 	GetAll(ctx context.Context) ([]models.User, error)
 	Create(ctx context.Context, user *models.User) error
 	CodeExists(ctx context.Context, code uint) (bool, error)
+	UserLogIn(ctx context.Context, code uint) (models.User, error)
+	GetUserByID(ctx context.Context, id string) (models.User, error)
 }
 
 type userRepository struct {
@@ -38,4 +41,16 @@ func (r *userRepository) CodeExists(ctx context.Context, code uint) (bool, error
 	var count int64
 	err := r.db.WithContext(ctx).Model(&models.User{}).Where("code = ?", code).Count(&count).Error
 	return count > 0, err
+}
+
+func (r *userRepository) UserLogIn(ctx context.Context, code uint) (models.User, error) {
+	var user models.User
+	err := r.db.WithContext(ctx).Where("code = ?", code).First(&user).Error
+	return user, err
+}
+
+func (r *userRepository) GetUserByID(ctx context.Context, id string) (models.User, error) {
+	var user models.User
+	err := r.db.WithContext(ctx).Where("id = ?", id).First(&user).Error
+	return user, err
 }

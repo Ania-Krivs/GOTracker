@@ -9,7 +9,8 @@ import (
 
 type AdminRepository interface {
 	Create(ctx context.Context, admin *models.Admin) error
-	FindByID(ctx context.Context, id uint) (*models.Admin, error)
+	FindByID(ctx context.Context, id string) (*models.Admin, error)
+	CheckSubscription(ctx context.Context, adminID string, userID string) bool
 }
 
 type adminRepository struct {
@@ -24,11 +25,17 @@ func (r *adminRepository) Create(ctx context.Context, admin *models.Admin) error
 	return r.db.WithContext(ctx).Create(admin).Error
 }
 
-func (r *adminRepository) FindByID(ctx context.Context, id uint) (*models.Admin, error) {
+func (r *adminRepository) FindByID(ctx context.Context, id string) (*models.Admin, error) {
 	var admin models.Admin
 
-	if err := r.db.WithContext(ctx).First(&admin, id).Error; err != nil {
+	if err := r.db.WithContext(ctx).First(&admin, "id = ?", id).Error; err != nil {
 		return nil, err
 	}
 	return &admin, nil
+}
+
+func (r *adminRepository) CheckSubscription(ctx context.Context, adminID string, userID string) bool {
+    var count int64
+    r.db.Model(&models.User{}).Where("id = ? AND admin_id = ?", userID, adminID).Count(&count)
+    return count > 0
 }

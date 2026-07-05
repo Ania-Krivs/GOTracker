@@ -5,7 +5,7 @@ type User struct {
 	Name string `gorm:"column:name"`
 	Code uint `gorm:"column:code;unique"`
 
-	AdminID   *uint     `gorm:"column:admin_id" json:"admin_id"`
+	AdminID   *string     `gorm:"column:admin_id" json:"admin_id"`
 }
 
 func(User) TableName() string{

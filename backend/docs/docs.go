@@ -68,6 +68,64 @@ const docTemplate = `{
                 }
             }
         },
+        "/admin/message": {
+            "post": {
+                "description": "Проверяет, является ли пользователь подчиненным (коллаборатором) данного администратора, и отправляет ему WebSocket-уведомление SHOW_DUCK с сообщением.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Отправка уведомления пользователю от администратора",
+                "parameters": [
+                    {
+                        "description": "Данные для триггера утки (admin_id, user_id, message)",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Уведомление успешно отправлено",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Неверный формат JSON или отсутствуют обязательные поля",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Доступ запрещен (пользователь не является коллаборатором этого админа)",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "405": {
+                        "description": "Метод не поддерживается (разрешен только POST)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/ping": {
             "get": {
                 "description": "Возвращает текстовый ответ \"pong\", если сервис успешно запущен и принимает запросы",
@@ -177,6 +235,58 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/users/login": {
+            "post": {
+                "description": "Принимает код входа, проверяет его и возвращает данные пользователя для последующего WS-подключения",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Вход пользователя по коду от администратора",
+                "parameters": [
+                    {
+                        "description": "Код входа пользователя",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/schemas.LoginByCode"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Пользователь успешно вошёл",
+                        "schema": {
+                            "$ref": "#/definitions/models.User"
+                        }
+                    },
+                    "400": {
+                        "description": "Неверный формат JSON или пользователь не найден",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -193,7 +303,7 @@ const docTemplate = `{
                     }
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "name": {
                     "type": "string"
@@ -204,7 +314,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "admin_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "code": {
                     "type": "integer"
@@ -244,10 +354,21 @@ const docTemplate = `{
             ],
             "properties": {
                 "admin_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "name": {
                     "type": "string"
+                }
+            }
+        },
+        "schemas.LoginByCode": {
+            "type": "object",
+            "required": [
+                "code"
+            ],
+            "properties": {
+                "code": {
+                    "type": "integer"
                 }
             }
         }

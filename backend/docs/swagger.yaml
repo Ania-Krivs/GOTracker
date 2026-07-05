@@ -9,14 +9,14 @@ definitions:
           $ref: '#/definitions/models.User'
         type: array
       id:
-        type: integer
+        type: string
       name:
         type: string
     type: object
   models.User:
     properties:
       admin_id:
-        type: integer
+        type: string
       code:
         type: integer
       id:
@@ -40,12 +40,19 @@ definitions:
   schemas.CreateUser:
     properties:
       admin_id:
-        type: integer
+        type: string
       name:
         type: string
     required:
     - admin_id
     - name
+    type: object
+  schemas.LoginByCode:
+    properties:
+      code:
+        type: integer
+    required:
+    - code
     type: object
 host: localhost:8080
 info:
@@ -88,6 +95,47 @@ paths:
               type: string
             type: object
       summary: Создать нового администратора
+      tags:
+      - admin
+  /admin/message:
+    post:
+      consumes:
+      - application/json
+      description: Проверяет, является ли пользователь подчиненным (коллаборатором)
+        данного администратора, и отправляет ему WebSocket-уведомление SHOW_DUCK с
+        сообщением.
+      parameters:
+      - description: Данные для триггера утки (admin_id, user_id, message)
+        in: body
+        name: input
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Уведомление успешно отправлено
+          schema:
+            type: string
+        "400":
+          description: Неверный формат JSON или отсутствуют обязательные поля
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Доступ запрещен (пользователь не является коллаборатором этого
+            админа)
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "405":
+          description: Метод не поддерживается (разрешен только POST)
+          schema:
+            type: string
+      summary: Отправка уведомления пользователю от администратора
       tags:
       - admin
   /ping:
@@ -162,6 +210,41 @@ paths:
               type: string
             type: object
       summary: Создание пользователя админом
+      tags:
+      - users
+  /users/login:
+    post:
+      consumes:
+      - application/json
+      description: Принимает код входа, проверяет его и возвращает данные пользователя
+        для последующего WS-подключения
+      parameters:
+      - description: Код входа пользователя
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/schemas.LoginByCode'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Пользователь успешно вошёл
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Неверный формат JSON или пользователь не найден
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Вход пользователя по коду от администратора
       tags:
       - users
 swagger: "2.0"

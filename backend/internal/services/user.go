@@ -15,6 +15,8 @@ import (
 type UserService interface {
 	GetUsers(ctx context.Context) ([]models.User, error)
 	CreateUser(ctx context.Context, input *schemas.CreateUser) (*models.User, error)
+	LoginByCode(ctx context.Context, code uint) (models.User, error)
+	GetUserByID(ctx context.Context, id string) (models.User, error)
 }
 
 type userService struct {
@@ -68,6 +70,31 @@ func (s *userService) CreateUser(ctx context.Context, input *schemas.CreateUser)
 	user.ID = uuid.New().String()
 	if err := s.repo.Create(ctx, user); err != nil {
 		return nil, err
+	}
+
+	return user, nil
+}
+
+func (s *userService) LoginByCode(ctx context.Context, code uint) (models.User, error) {
+	user, err := s.repo.UserLogIn(ctx, code)
+	if err != nil {
+		return models.User{}, err
+	}
+
+	if user.ID == "" {
+		return models.User{}, errors.New("пользователь с таким кодом не найден")
+	}
+
+	return user, nil
+}
+
+func (s *userService) GetUserByID(ctx context.Context, id string) (models.User, error) {
+	user, err := s.repo.GetUserByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return models.User{}, errors.New("Пользователь не найден")
+		}
+		return models.User{}, err
 	}
 
 	return user, nil

@@ -1,8 +1,8 @@
 package http
 
 import (
-	"context"
-	"encoding/json"
+	// "context"
+	// "encoding/json"
 	"net/http"
 
 	"github.com/Ania-Krivs/GOTracker/internal/services"
@@ -17,10 +17,16 @@ var upgrader = websocket.Upgrader{
 
 type WSHandler struct {
 	notifService services.NotificationService
+	hub 		 *services.ClientHub
+    userService  services.UserService
 }
 
-func NewWSHandler(notifService services.NotificationService) *WSHandler {
-	return &WSHandler{notifService: notifService}
+func NewWSHandler(notifService services.NotificationService, hub *services.ClientHub, userService services.UserService) *WSHandler {
+	return &WSHandler{
+		notifService: notifService,
+		hub: hub,
+        userService: userService,
+	}
 }
 
 type AdminWSRequest struct {
@@ -29,69 +35,82 @@ type AdminWSRequest struct {
 }
 
 func (h *WSHandler) MessageRourer() {
-	http.HandleFunc("/ws", h.ConnectUserAndTalk)
+	http.HandleFunc("/ws/user", h.SubscribeNotifications)
+    http.HandleFunc("/ws/admin", h.ConnectAdmin)
 
 }
 
-func (h *WSHandler) ConnectUserAndTalk(w http.ResponseWriter, r *http.Request) {
+func (h *WSHandler) SubscribeNotifications(w http.ResponseWriter, r *http.Request) {
+    userID := r.URL.Query().Get("user_id")
+    if userID == "" {
+        w.WriteHeader(http.StatusBadRequest)
+        return
+    }
+
+    conn, err := upgrader.Upgrade(w, r, nil)
+    if err != nil {
+        return
+    }
+    
+    h.hub.RegisterUser(userID, conn)
+    
+    defer func() {
+        h.hub.UnregisterUser(userID)
+    }()
+
+    for {
+		_, msgBytes, err := conn.ReadMessage()
+		if err != nil {
+			break
+		}
+
+		userReply := string(msgBytes)
+
+		user, err := h.userService.GetUserByID(r.Context(), userID)
+		if err != nil {
+			return 
+		}
+
+		targetAdminID := *user.AdminID 
+
+		replyToAdmin := map[string]string{
+			"event":      "USER_REPLY",
+			"user_id":    userID,
+			"user_name":  user.Name,
+			"text_reply": userReply,
+		}
+
+		adminOnline := h.hub.SendToAdmin(targetAdminID, replyToAdmin)
+		
+		if !adminOnline {
+			println(targetAdminID, "сейчас оффлайн")
+		}
+    }
+}
+
+
+func (h *WSHandler) ConnectAdmin(w http.ResponseWriter, r *http.Request) {
+	adminID := r.URL.Query().Get("admin_id")
+	if adminID == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		return
 	}
-	defer conn.Close()
 
-	_, reqBytes, err := conn.ReadMessage()
-	if err != nil {
-		return
-	}
+	h.hub.RegisterAdmin(adminID, conn)
 
-	var req AdminWSRequest
-	if err := json.Unmarshal(reqBytes, &req); err != nil {
-		_ = conn.WriteMessage(websocket.TextMessage, []byte("Неверный формат запроса"))
-		return
-	}
-
-	cnx, cancel := context.WithCancel(r.Context())
-	defer cancel()
-
-	sendCh := make(chan string, 10)
-	receiveCh := make(chan string, 1)
-
-	writeDone := make(chan struct{})
-
-	go func() {
-		defer close(receiveCh)
-		for {
-			_, msgBytes, err := conn.ReadMessage()
-			if err != nil {
-				return
-			}
-			receiveCh <- string(msgBytes)
-		}
+	defer func() {
+		h.hub.UnregisterAdmin(adminID)
 	}()
 
-	go func() {
-		defer close(writeDone)
-		for msg := range sendCh {
-			_ = conn.WriteMessage(websocket.TextMessage, []byte(msg))
+	for {
+		_, _, err := conn.ReadMessage()
+		if err != nil {
+			break
 		}
-
-		_ = conn.WriteMessage(
-            websocket.CloseMessage, 
-            websocket.FormatCloseMessage(websocket.CloseNormalClosure, "Сессия закрыта"),
-        )
-	}()
-
-	userResponse, err := h.notifService.HandleAdminMessage(cnx, req.Message, sendCh, receiveCh)
-	
-	if err != nil{
-		sendCh <- err.Error()
-	} else {
-		sendCh <- "Ответ:" + userResponse
 	}
-
-	close(sendCh)
-
-	<-writeDone
-
 }

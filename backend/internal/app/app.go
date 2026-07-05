@@ -5,6 +5,7 @@ import (
 	netHttp "net/http"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 
 	"github.com/Ania-Krivs/GOTracker/internal/repository"
 	"github.com/Ania-Krivs/GOTracker/internal/services"
@@ -18,14 +19,18 @@ func InitDB(user, password, name, host, port string) (*gorm.DB, error) {
 		host, user, password, name, port,
 	)
 	
-	return gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	return gorm.Open(postgres.Open(dsn), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Info),
+	})
 }
 
 
 func InitRouters(db *gorm.DB) {
+	hub := services.NewClientHub()
+
 	adminRepo := repository.NewAdminRepository(db)
 	adminService := services.NewAdminService(adminRepo)
-	adminHandler := http.NewAdminHandler(adminService)
+	adminHandler := http.NewAdminHandler(adminService, hub)
 	adminHandler.AdminRouter()
 	
 	userRepo := repository.NewUserRepository(db)
@@ -35,9 +40,9 @@ func InitRouters(db *gorm.DB) {
 
 	http.PingRouter()
 
-	notificationService := services.NewNotificationService()
-	wsHandler := http.NewWSHandler(notificationService)
-	wsHandler.MessageRourer()
+    notificationService := services.NewNotificationService()
+    wsHandler := http.NewWSHandler(notificationService, hub, userService)
+    wsHandler.MessageRourer()
 
 	netHttp.HandleFunc("/swagger/", httpSwagger.Handler(
 		httpSwagger.URL("http://localhost:8080/swagger/doc.json"),
