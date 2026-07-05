@@ -17,6 +17,7 @@ type UserService interface {
 	CreateUser(ctx context.Context, input *schemas.CreateUser) (*models.User, error)
 	LoginByCode(ctx context.Context, code uint) (models.User, error)
 	GetUserByID(ctx context.Context, id string) (models.User, error)
+	DeleteUser(ctx context.Context, id string) error
 }
 
 type userService struct {
@@ -98,4 +99,16 @@ func (s *userService) GetUserByID(ctx context.Context, id string) (models.User, 
 	}
 
 	return user, nil
+}
+
+func (s *userService) DeleteUser(ctx context.Context, id string) error {
+	_, err := s.repo.GetUserByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("Пользователь не найден")
+		}
+		return err
+	}
+
+	return s.repo.DeleteUser(ctx, id)
 }

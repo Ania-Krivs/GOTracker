@@ -14,6 +14,7 @@ type UserRepository interface {
 	CodeExists(ctx context.Context, code uint) (bool, error)
 	UserLogIn(ctx context.Context, code uint) (models.User, error)
 	GetUserByID(ctx context.Context, id string) (models.User, error)
+	DeleteUser(ctx context.Context, id string) error
 }
 
 type userRepository struct {
@@ -53,4 +54,9 @@ func (r *userRepository) GetUserByID(ctx context.Context, id string) (models.Use
 	var user models.User
 	err := r.db.WithContext(ctx).Where("id = ?", id).First(&user).Error
 	return user, err
+}
+
+func (r *userRepository) DeleteUser(ctx context.Context, id string) error {
+	
+    return r.db.WithContext(ctx).Unscoped().Where("id = ?", id).Delete(&models.User{}).Error
 }

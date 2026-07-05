@@ -157,6 +157,34 @@ paths:
       tags:
       - system
   /users:
+    delete:
+      consumes:
+      - application/json
+      description: Удаляет пользователя из системы по его уникальному ID
+      parameters:
+      - description: ID пользователя для удаления
+        in: query
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Пользователь успешно удален
+          schema:
+            type: string
+        "400":
+          description: ID не указан или пользователь не найден
+          schema:
+            type: string
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            type: string
+      summary: Удаление пользователя
+      tags:
+      - users
     get:
       description: Возвращает список всех пользователей из базы данных
       produces:
@@ -177,7 +205,6 @@ paths:
       summary: Получить всех пользователей
       tags:
       - users
-  /users/:
     post:
       consumes:
       - application/json
@@ -235,15 +262,11 @@ paths:
         "400":
           description: Неверный формат JSON или пользователь не найден
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            type: string
         "500":
           description: Внутренняя ошибка сервера
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            type: string
       summary: Вход пользователя по коду от администратора
       tags:
       - users

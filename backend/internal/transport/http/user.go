@@ -17,10 +17,10 @@ func NewHandler(userService services.UserService) *Handler {
 }
 
 func (h *Handler) UserRouter() {
-	http.HandleFunc("/users", h.GetAllUsers)
-	http.HandleFunc("/users/", h.CreateUser)
-	http.HandleFunc("/users/login", h.UserLogIn)
-
+	http.HandleFunc("GET /users", h.GetAllUsers)
+	http.HandleFunc("POST /users", h.CreateUser)
+	http.HandleFunc("POST /users/login", h.UserLogIn)
+	http.HandleFunc("DELETE /users", h.DeleteUser)
 }
 
 // GetAllUsers godoc
@@ -60,7 +60,7 @@ func (h *Handler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 // @Success      201   {object} models.User       "Пользователь успешно создан"
 // @Failure      400   {object} map[string]string "Неверный формат JSON или админ не найден"
 // @Failure      500   {object} map[string]string "Внутренняя ошибка сервера"
-// @Router       /users/ [post]
+// @Router       /users [post]
 func (h *Handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -94,8 +94,8 @@ func (h *Handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 // @Produce      json
 // @Param        input body      schemas.LoginByCode true  "Код входа пользователя"
 // @Success      200   {object}  models.User                "Пользователь успешно вошёл"
-// @Failure      400   {object}  map[string]string          "Неверный формат JSON или пользователь не найден"
-// @Failure      500   {object}  map[string]string          "Внутренняя ошибка сервера"
+// @Failure      400   {object}  string          "Неверный формат JSON или пользователь не найден"
+// @Failure      500   {object}  string          "Внутренняя ошибка сервера"
 // @Router       /users/login [post]
 func (h *Handler) UserLogIn(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
@@ -107,17 +107,54 @@ func (h *Handler) UserLogIn(w http.ResponseWriter, r *http.Request) {
 	var input schemas.LoginByCode
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		_ = json.NewEncoder(w).Encode(map[string]string{"error": "Неверный формат JSON тела запроса"})
+		_ = json.NewEncoder(w).Encode("Неверный формат JSON тела запроса")
 		return
 	}
 
 	user, err := h.userService.LoginByCode(r.Context(), input.Code)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		_ = json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		_ = json.NewEncoder(w).Encode(err.Error())
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(user)
+}
+
+
+// DeleteUser godoc
+// @Summary      Удаление пользователя
+// @Description  Удаляет пользователя из системы по его уникальному ID
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Param        id   query    string  true  "ID пользователя для удаления"
+// @Success      204  {object}  string  "Пользователь успешно удален"
+// @Failure      400  {object}  string  "ID не указан или пользователь не найден"
+// @Failure      500  {object}  string  "Внутренняя ошибка сервера"
+// @Router       /users [delete]
+func (h *Handler) DeleteUser(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodDelete {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": "Параметр id обязателен"})
+		return
+	}
+
+	err := h.userService.DeleteUser(r.Context(), id)
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
