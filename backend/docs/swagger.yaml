@@ -66,10 +66,10 @@ paths:
     post:
       consumes:
       - application/json
-      description: Регистрирует администратора, хеширует его пароль и сохраняет в
-        БД
+      description: Если администратора нет, регистрирует и сохраняет в БД. Если есть
+        — проверяет пароль и логинит.
       parameters:
-      - description: Данные для создания админа
+      - description: Данные для входа/регистрации админа
         in: body
         name: input
         required: true
@@ -78,23 +78,23 @@ paths:
       produces:
       - application/json
       responses:
+        "200":
+          description: Администратор успешно аутентифицирован
+          schema:
+            $ref: '#/definitions/models.Admin'
         "201":
-          description: Created
+          description: Администратор успешно создан
           schema:
             $ref: '#/definitions/models.Admin'
         "400":
-          description: Bad Request
+          description: Неверный запрос или ошибка аутентификации
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            type: string
         "500":
-          description: Internal Server Error
+          description: Внутренняя ошибка сервера
           schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Создать нового администратора
+            type: string
+      summary: Создать или аутентифицировать администратора
       tags:
       - admin
   /admin/message:

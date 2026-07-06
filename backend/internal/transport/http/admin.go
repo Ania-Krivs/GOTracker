@@ -33,35 +33,41 @@ func (h *AdminHandler) CreateAdminDispatch(w http.ResponseWriter, r *http.Reques
 }
 
 // CreateAdmin godoc
-// @Summary      Создать нового администратора
-// @Description  Регистрирует администратора, хеширует его пароль и сохраняет в БД
+// @Summary      Создать или аутентифицировать администратора
+// @Description  Если администратора нет, регистрирует и сохраняет в БД. Если есть — проверяет пароль и логинит.
 // @Tags         admin
 // @Accept       json
 // @Produce      json
-// @Param        input body schemas.CreateAdminInput true "Данные для создания админа"
-// @Success      201  {object}  models.Admin
-// @Failure      400  {object}  map[string]string
-// @Failure      500  {object}  map[string]string
+// @Param        input body schemas.CreateAdminInput true "Данные для входа/регистрации админа"
+// @Success      200  {object}  models.Admin "Администратор успешно аутентифицирован"
+// @Success      201  {object}  models.Admin "Администратор успешно создан"
+// @Failure      400  {object}  string "Неверный запрос или ошибка аутентификации"
+// @Failure      500  {object}  string "Внутренняя ошибка сервера"
 // @Router       /admin [post]
 func (h *AdminHandler) CreateAdmin(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
+    w.Header().Set("Content-Type", "application/json")
 
-	var input schemas.CreateAdminInput
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		_ = json.NewEncoder(w).Encode(map[string]string{"error": "Неверный формат JSON"})
-		return
-	}
+    var input schemas.CreateAdminInput
+    if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+        w.WriteHeader(http.StatusBadRequest)
+        _ = json.NewEncoder(w).Encode("Неверный формат JSON")
+        return
+    }
 
-	admin, err := h.adminService.CreateAdmin(r.Context(), input)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		_ = json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
-		return
-	}
+	admin, isNew, err := h.adminService.CreateAdmin(r.Context(), input)
+    if err != nil {
+        w.WriteHeader(http.StatusBadRequest)
+        _ = json.NewEncoder(w).Encode(err.Error())
+        return
+    }
 
-	w.WriteHeader(http.StatusCreated)
-	_ = json.NewEncoder(w).Encode(admin)
+    if isNew {
+        w.WriteHeader(http.StatusCreated) 
+    } else {
+        w.WriteHeader(http.StatusOK)
+    }
+
+    _ = json.NewEncoder(w).Encode(admin)
 }
 
 // TriggerDuck godoc

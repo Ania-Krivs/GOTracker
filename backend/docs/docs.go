@@ -18,7 +18,7 @@ const docTemplate = `{
     "paths": {
         "/admin": {
             "post": {
-                "description": "Регистрирует администратора, хеширует его пароль и сохраняет в БД",
+                "description": "Если администратора нет, регистрирует и сохраняет в БД. Если есть — проверяет пароль и логинит.",
                 "consumes": [
                     "application/json"
                 ],
@@ -28,10 +28,10 @@ const docTemplate = `{
                 "tags": [
                     "admin"
                 ],
-                "summary": "Создать нового администратора",
+                "summary": "Создать или аутентифицировать администратора",
                 "parameters": [
                     {
-                        "description": "Данные для создания админа",
+                        "description": "Данные для входа/регистрации админа",
                         "name": "input",
                         "in": "body",
                         "required": true,
@@ -41,28 +41,28 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
+                    "200": {
+                        "description": "Администратор успешно аутентифицирован",
+                        "schema": {
+                            "$ref": "#/definitions/models.Admin"
+                        }
+                    },
                     "201": {
-                        "description": "Created",
+                        "description": "Администратор успешно создан",
                         "schema": {
                             "$ref": "#/definitions/models.Admin"
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Неверный запрос или ошибка аутентификации",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "type": "string"
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Внутренняя ошибка сервера",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "type": "string"
                         }
                     }
                 }
