@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
             slider.style.transform = 'translateX(100%)';
             titleA.textContent = 'Admin Register';
             fieldName.classList.remove('hidden');
-            submitBtn.textContent = 'Register';
+            submitBtn.textContent = 'Continue';
             clearError();
         });
 
@@ -102,4 +102,36 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+});
+
+document.getElementById("back-btn").onclick = () => {
+
+    window.location.href = "popup.html";
+
+};
+
+
+const password =
+document.getElementById("field-password");
+
+const eye =
+document.getElementById("togglePassword");
+
+eye.addEventListener("click", ()=>{
+
+    if(password.type==="password"){
+
+        password.type="text";
+
+        eye.textContent="visibility_off";
+
+    }
+    else{
+
+        password.type="password";
+
+        eye.textContent="visibility";
+
+    }
+
 });

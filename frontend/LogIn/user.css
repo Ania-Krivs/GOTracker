@@ -35,6 +35,8 @@ input {
     transition: opacity 0.25s ease, transform 0.25s ease, background 0.25s;
     opacity: 1;
     transform: translateY(0);
+    font-family: "Roboto", sans-serif;
+    font-weight: 600;
 }
 
 input::placeholder {
@@ -79,4 +81,47 @@ button:hover {
     color: #fff;
     text-align: center;
     margin-bottom: 24px;
+}
+
+#back-btn{
+
+
+    top:16px;
+    left:16px;
+
+    width:100px;
+    height:40px;
+
+    border:none;
+    border-radius:14px;
+
+    background:rgba(255,255,255,.35);
+
+    backdrop-filter:blur(12px);
+
+    color:#222;
+
+    font-family:"Roboto",sans-serif;
+    font-size:15px;
+    font-weight:500;
+
+    cursor:pointer;
+
+    transition:.2s ease;
+}
+
+#back-btn:hover{
+
+    background:rgba(255,255,255,.55);
+
+    transform:translateY(-2px);
+
+    box-shadow:0 8px 18px rgba(0,0,0,.18);
+
+}
+
+#back-btn:active{
+
+    transform:scale(.97);
+
 }
