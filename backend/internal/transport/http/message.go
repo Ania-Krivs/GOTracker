@@ -17,15 +17,15 @@ var upgrader = websocket.Upgrader{
 
 type WSHandler struct {
 	notifService services.NotificationService
-	hub 		 *services.ClientHub
-    userService  services.UserService
+	hub          *services.ClientHub
+	userService  services.UserService
 }
 
 func NewWSHandler(notifService services.NotificationService, hub *services.ClientHub, userService services.UserService) *WSHandler {
 	return &WSHandler{
 		notifService: notifService,
-		hub: hub,
-        userService: userService,
+		hub:          hub,
+		userService:  userService,
 	}
 }
 
@@ -36,29 +36,29 @@ type AdminWSRequest struct {
 
 func (h *WSHandler) MessageRourer() {
 	http.HandleFunc("/ws/user", h.SubscribeNotifications)
-    http.HandleFunc("/ws/admin", h.ConnectAdmin)
+	http.HandleFunc("/ws/admin", h.ConnectAdmin)
 
 }
 
 func (h *WSHandler) SubscribeNotifications(w http.ResponseWriter, r *http.Request) {
-    userID := r.URL.Query().Get("user_id")
-    if userID == "" {
-        w.WriteHeader(http.StatusBadRequest)
-        return
-    }
+	userID := r.URL.Query().Get("user_id")
+	if userID == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
-    conn, err := upgrader.Upgrade(w, r, nil)
-    if err != nil {
-        return
-    }
-    
-    h.hub.RegisterUser(userID, conn)
-    
-    defer func() {
-        h.hub.UnregisterUser(userID)
-    }()
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		return
+	}
 
-    for {
+	h.hub.RegisterUser(userID, conn)
+
+	defer func() {
+		h.hub.UnregisterUser(userID)
+	}()
+
+	for {
 		_, msgBytes, err := conn.ReadMessage()
 		if err != nil {
 			break
@@ -68,26 +68,34 @@ func (h *WSHandler) SubscribeNotifications(w http.ResponseWriter, r *http.Reques
 
 		user, err := h.userService.GetUserByID(r.Context(), userID)
 		if err != nil {
-			return 
+			return
 		}
 
-		targetAdminID := *user.AdminID 
+		targetAdminID := ""
+		if user.AdminID != nil {
+			targetAdminID = *user.AdminID
+		}
+
+		if targetAdminID == "" {
+			println("user", userID, "не имеет admin_id")
+			return
+		}
 
 		replyToAdmin := map[string]string{
 			"event":      "USER_REPLY",
 			"user_id":    userID,
 			"user_name":  user.Name,
+			"message":    userReply,
 			"text_reply": userReply,
 		}
 
 		adminOnline := h.hub.SendToAdmin(targetAdminID, replyToAdmin)
-		
+
 		if !adminOnline {
 			println(targetAdminID, "сейчас оффлайн")
 		}
-    }
+	}
 }
-
 
 func (h *WSHandler) ConnectAdmin(w http.ResponseWriter, r *http.Request) {
 	adminID := r.URL.Query().Get("admin_id")
