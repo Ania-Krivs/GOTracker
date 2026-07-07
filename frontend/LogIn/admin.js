@@ -21,9 +21,9 @@ document.addEventListener('DOMContentLoaded', () => {
             tabLogin.classList.add('active');
             tabRegister.classList.remove('active');
             slider.style.transform = 'translateX(0)';
-            titleA.textContent = 'Admin LogIn';
+            titleA.textContent = 'Вход';
             fieldName.classList.add('hidden');
-            submitBtn.textContent = 'Confirm';
+            submitBtn.textContent = 'Продолжить';
             clearError();
         });
 
@@ -31,9 +31,9 @@ document.addEventListener('DOMContentLoaded', () => {
             tabRegister.classList.add('active');
             tabLogin.classList.remove('active');
             slider.style.transform = 'translateX(100%)';
-            titleA.textContent = 'Admin Register';
+            titleA.textContent = 'Регистрация';
             fieldName.classList.remove('hidden');
-            submitBtn.textContent = 'Continue';
+            submitBtn.textContent = 'Продолжить';
             clearError();
         });
 
@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             try {
                 submitBtn.disabled = true;
-                submitBtn.textContent = 'Sending...';
+                submitBtn.textContent = 'Отправка...';
 
                 const response = await fetch('http://localhost:8080/admin', { 
                     method: 'POST',
@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 errorBlock.classList.remove('hidden');
             } finally {
                 submitBtn.disabled = false;
-                submitBtn.textContent = isRegisterMode ? 'Register' : 'Confirm';
+                submitBtn.textContent = isRegisterMode ? 'Регистрация' : 'Продолжить';
             }
         });
     }
