@@ -5,6 +5,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalTitle = document.getElementById("modal-title");
     const modalBodyContent = document.getElementById("modal-body-content");
     const globalErrorBlock = document.getElementById("error-message");
+    const toastContainer = document.getElementById("toast-container");
+
+    let adminSocket = null;
 
     const getStoredAdminId = () => {
         const stored = localStorage.getItem('admin_id')
@@ -15,6 +18,53 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const currentAdminId = getStoredAdminId();
+
+    // ПОДКЛЮЧЕНИЕ К WEBSOCKET ДЛЯ АДМИНИСТРАТОРА
+    const initAdminWebSocket = () => {
+        if (!currentAdminId) return;
+
+        // Формируем адрес ws-соединения (подставьте ваш точный эндпоинт, если он отличается)
+        const wsUrl = `ws://localhost:8080/ws/admin?admin_id=${currentAdminId}`;
+        adminSocket = new WebSocket(wsUrl);
+
+        adminSocket.onopen = () => {
+            console.log("WebSocket соединение админа успешно установлено.");
+        };
+
+        adminSocket.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                // Предполагается структура ответа пользователя: { user_name: "...", message: "..." }
+                const senderName = data.user_name || "Участник";
+                const text = data.message || "Отправил ответ";
+                
+                showNotificationToast(senderName, text);
+            } catch (err) {
+                console.warn("Получены нетекстовые или некорректные данные по WS:", event.data);
+            }
+        };
+
+        adminSocket.onclose = () => {
+            console.log("WebSocket соединение закрыто. Попытка переподключения через 5 секунд...");
+            setTimeout(initAdminWebSocket, 5000);
+        };
+
+        adminSocket.onerror = (err) => {
+            console.error("Ошибка WebSocket:", err);
+        };
+    };
+
+    const showNotificationToast = (user, message) => {
+        const toast = document.createElement("div");
+        toast.className = "toast";
+        toast.innerHTML = `<strong>${user}:</strong> <span>${message}</span>`;
+        toastContainer.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.animation = "slideIn 0.3s ease reverse forwards";
+            setTimeout(() => toast.remove(), 300);
+        }, 6000);
+    };
 
     const normalizeUser = (user) => {
         if (!user || typeof user !== 'object') {
@@ -87,14 +137,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const box = document.createElement('div');
             box.className = 'box';
             box.dataset.userId = user.id;
+            
             box.innerHTML = `
                 <div class="user-info">
                     <span class="User_name">${user.name}</span>
-                    <span class="user-meta-code">Код доступа: #${user.code}</span>
                 </div>
                 <div class="action-buttons">
+                    <button class="msg-btn" data-user-id="${user.id}" data-name="${user.name}">Отправить сообщение</button>
                     <button id="Duck" data-code="${user.code}" data-name="${user.name}">Показать код</button>
-                    <button id="Min">&times;</button>
+                    <button id="Min" title="Удалить"></button>
                 </div>
             `;
             elementsList.appendChild(box);
@@ -102,24 +153,101 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     addButton.addEventListener('click', () => {
-        modalTitle.textContent = 'Добавить Участника';
+        modalTitle.textContent = 'Новый участник';
         modalBodyContent.innerHTML = `
-            <div class="modal-form-group">
-                <p>Введите имя нового пользователя:</p>
-                <input type="text" class="User_names" id="new-user-name-input" placeholder="Например, Иван Иванов">
+            <form id="add-user-form" class="modal-form-group" onsubmit="event.preventDefault();">
+                <label class="modal-input-label" for="new-user-name-input">Введите имя нового пользователя:</label>
+                <input type="text" class="User_names" id="new-user-name-input" placeholder="Например, Иван Иванов" autocomplete="off">
                 <div id="modal-error" class="error-text hidden"></div>
                 <div class="modal-actions">
-                    <button id="Close_error">Отмена</button>
-                    <button id="Create_user">Добавить</button>
+                    <button type="button" id="Close_error">Отмена</button>
+                    <button type="submit" id="Create_user">Добавить</button>
                 </div>
-            </div>
+            </form>
         `;
         modalOverlay.classList.remove('hidden');
+        setTimeout(() => document.getElementById('new-user-name-input')?.focus(), 40);
+    });
+
+    // ОБРАБОТЧИК ДЛЯ КНОПКИ «ОТПРАВИТЬ СООБЩЕНИЕ» В СПИСКЕ
+    elementsList.addEventListener('click', (e) => {
+        if (e.target && e.target.classList.contains('msg-btn')) {
+            const userId = e.target.dataset.userId;
+            const name = e.target.dataset.name;
+
+            modalTitle.textContent = `Сообщение для ${name}`;
+            modalBodyContent.innerHTML = `
+                <form id="send-msg-form" class="modal-form-group" onsubmit="event.preventDefault();">
+                    <label class="modal-input-label" for="admin-message-input">Текст сообщения:</label>
+                    <textarea class="modal-textarea" id="admin-message-input" placeholder="Введите ваше сообщение участнику..." maxlength="150"></textarea>
+                    <div id="char-count" class="char-counter">0 / 150</div>
+                    <div id="modal-error" class="error-text hidden"></div>
+                    <div class="modal-actions">
+                        <button type="button" id="Close_error">Отмена</button>
+                        <button type="submit" id="Send_msg_btn" data-user-id="${userId}">Отправить</button>
+                    </div>
+                </form>
+            `;
+
+            const textarea = document.getElementById('admin-message-input');
+            const charCount = document.getElementById('char-count');
+
+            textarea.addEventListener('input', () => {
+                charCount.textContent = `${textarea.value.length} / 150`;
+            });
+
+            modalOverlay.classList.remove('hidden');
+            setTimeout(() => textarea.focus(), 40);
+        }
     });
 
     modalOverlay.addEventListener('click', (e) => {
         if (e.target && e.target.id === 'Close_error') {
             closeModal();
+        }
+    });
+
+    // ОТПРАВКА СООБЩЕНИЯ НА БЭКЕНД С ВАЛИДАЦИЕЙ СИМВОЛОВ
+    modalOverlay.addEventListener('click', async (e) => {
+        if (e.target && e.target.id === 'Send_msg_btn') {
+            const userId = e.target.dataset.userId;
+            const textarea = document.getElementById('admin-message-input');
+            const modalError = document.getElementById('modal-error');
+            const messageText = textarea ? textarea.value.trim() : "";
+
+            if (modalError) modalError.classList.add('hidden');
+
+            if (messageText.length === 0) {
+                modalError.textContent = 'Вы не ввели текст сообщения';
+                modalError.classList.remove('hidden');
+                return;
+            }
+
+            try {
+                e.target.disabled = true;
+                const response = await fetch('http://localhost:8080/admin/message', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        admin_id: currentAdminId,
+                        user_id: userId,
+                        message: messageText
+                    })
+                });
+
+                const data = await response.json().catch(() => null);
+                if (!response.ok) {
+                    throw new Error(data?.error || 'Не удалось отправить сообщение');
+                }
+
+                closeModal();
+            } catch (err) {
+                if (modalError) {
+                    modalError.textContent = err.message;
+                    modalError.classList.remove('hidden');
+                }
+                e.target.disabled = false;
+            }
         }
     });
 
@@ -203,10 +331,10 @@ document.addEventListener('DOMContentLoaded', () => {
             modalTitle.textContent = 'Код Доступа';
             modalBodyContent.innerHTML = `
                 <div class="share-code-container">
-                    <p>Передайте этот код пользователю <strong>${name}</strong> для авторизации:</p>
+                    <p style="font-size: 14px; color: #a29db8; margin-bottom: 12px;">Передайте этот код пользователю <strong>${name}</strong> для авторизации:</p>
                     <div id="User_code">${code}</div>
-                    <div class="modal-actions">
-                        <button id="Close_error" style="width:100%">Понятно</button>
+                    <div class="modal-actions" style="margin-top: 20px;">
+                        <button id="Close_error" style="width:100%; background: #1a1530; border: 1px solid #2d2452;">Понятно</button>
                     </div>
                 </div>
             `;
@@ -214,5 +342,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Запуск процессов
     fetchUsers();
+    initAdminWebSocket();
 });

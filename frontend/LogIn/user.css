@@ -1,5 +1,5 @@
 body {
-        font-family: "Roboto", sans-serif;
+    font-family: "Roboto", sans-serif;
     width: 360px;
     height: auto;
     padding: 20px;
@@ -7,6 +7,7 @@ body {
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
+    margin: 0;
 }
 
 .container {
@@ -19,9 +20,8 @@ body {
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
 }
 
-input {
+input, textarea {
     width: 100%;
-    height: 44px; 
     margin-bottom: 12px;
     padding: 0 16px;
     font-size: 15px;
@@ -33,21 +33,30 @@ input {
     border-radius: 12px;
     outline: none;
     transition: opacity 0.25s ease, transform 0.25s ease, background 0.25s;
-    opacity: 1;
-    transform: translateY(0);
-    font-family: "Roboto", sans-serif;
     font-weight: 600;
+    box-sizing: border-box;
 }
 
-input::placeholder {
+input {
+    height: 44px; 
+}
+
+textarea {
+    height: 80px;
+    padding: 12px 16px;
+    resize: none;
+    margin-bottom: 4px;
+}
+
+input::placeholder, textarea::placeholder {
     color: rgba(0, 0, 0, 0.45);
 }
 
-input:hover {
+input:hover, textarea:hover {
     background: rgba(255, 255, 255, 0.45);
 }
 
-input:focus {
+input:focus, textarea:focus {
     background: rgba(255, 255, 255, 0.65);
     border-color: white;
     box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.15);
@@ -63,9 +72,10 @@ button {
     margin-top: 8px;
     background-color: floralwhite;
     border: none;
-    border-radius: 12px;               
+    border-radius: 12px;              
     cursor: pointer;                  
-    transition: 0.3s;             
+    transition: 0.3s;              
+    box-sizing: border-box;
 }
 
 button:hover {
@@ -81,47 +91,96 @@ button:hover {
     color: #fff;
     text-align: center;
     margin-bottom: 24px;
+    margin-top: 10px;
 }
 
-#back-btn{
-
-
-    top:16px;
-    left:16px;
-
-    width:100px;
-    height:40px;
-
-    border:none;
-    border-radius:14px;
-
-    background:rgba(255,255,255,.35);
-
-    backdrop-filter:blur(12px);
-
-    color:#222;
-
-    font-family:"Roboto",sans-serif;
-    font-size:15px;
-    font-weight:500;
-
-    cursor:pointer;
-
-    transition:.2s ease;
+#back-btn {
+    width: 100px;
+    height: 40px;
+    border: none;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, .35);
+    backdrop-filter: blur(12px);
+    color: #222;
+    font-family: "Roboto", sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: .2s ease;
+    margin-top: 0;
 }
 
-#back-btn:hover{
-
-    background:rgba(255,255,255,.55);
-
-    transform:translateY(-2px);
-
-    box-shadow:0 8px 18px rgba(0,0,0,.18);
-
+#back-btn:hover {
+    background: rgba(255, 255, 255, .55);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, .18);
 }
 
-#back-btn:active{
+#back-btn:active {
+    transform: scale(.97);
+}
 
-    transform:scale(.97);
+.hidden {
+    display: none !important;
+}
 
+.error-msg {
+    color: #ff4d4d;
+    background: rgba(255, 77, 77, 0.15);
+    border: 1px solid rgba(255, 77, 77, 0.3);
+    border-radius: 10px;
+    padding: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 12px;
+    text-align: center;
+}
+
+.status-container {
+    font-size: 13px;
+    color: #fff;
+    text-align: center;
+    margin-bottom: 16px;
+    font-weight: 500;
+}
+
+#status-indicator.connected {
+    color: #2ee67e;
+    font-weight: 700;
+}
+
+#status-indicator.disconnected {
+    color: #ff4d4d;
+    font-weight: 700;
+}
+
+.chat-placeholder {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px dashed rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
+    padding: 16px;
+    color: #fff;
+    font-size: 14px;
+    text-align: center;
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+    line-height: 1.4;
+}
+
+.incoming-msg {
+    background: rgba(255, 255, 255, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    text-align: left;
+    border-style: solid;
+}
+
+#char-counter {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.7);
+    text-align: right;
+    margin-bottom: 8px;
+    padding-right: 4px;
 }
