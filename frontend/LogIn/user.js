@@ -63,6 +63,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 throw new Error("User ID not found in server response");
             }
 
+            chrome.storage.local.set({ userId: String(userId) });
+
             // Переключаем экраны интерфейса
             authSection.classList.add("hidden");
             workspaceSection.classList.remove("hidden");
@@ -180,20 +182,38 @@ document.addEventListener("DOMContentLoaded", () => {
             const message = text || 'Хонк!';
             const payload = { action: 'SHOW_DUCK', message };
 
+            const deliverToTab = (tabId) => {
+                chrome.tabs.sendMessage(tabId, payload, () => {
+                    const error = chrome.runtime.lastError;
+
+                    if (error) {
+                        chrome.scripting.insertCSS({
+                            target: { tabId },
+                            files: ['Duck/style.css']
+                        }).catch(() => {});
+
+                        chrome.scripting.executeScript({
+                            target: { tabId },
+                            files: ['Duck/script.js']
+                        }).then(() => {
+                            chrome.tabs.sendMessage(tabId, payload).catch(() => {});
+                        }).catch(() => {});
+                    }
+                });
+            };
+
             try {
-                chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-                    const tab = tabs && tabs[0];
-                    if (tab && tab.id !== undefined) {
-                        chrome.tabs.sendMessage(tab.id, payload, () => {
-                            if (chrome.runtime.lastError) {
-                                console.warn('Не удалось отправить сообщение в страницу сайта:', chrome.runtime.lastError.message);
-                                chrome.runtime.sendMessage(payload);
-                            }
-                        });
+                chrome.tabs.query({ url: ['http://*/*', 'https://*/*', 'file://*/*'] }, (tabs) => {
+                    if (!tabs || tabs.length === 0) {
+                        chrome.runtime.sendMessage(payload);
                         return;
                     }
 
-                    chrome.runtime.sendMessage(payload);
+                    tabs.forEach((tab) => {
+                        if (tab && tab.id !== undefined) {
+                            deliverToTab(tab.id);
+                        }
+                    });
                 });
             } catch (err) {
                 console.warn('Ошибка отправки сообщения утке:', err);

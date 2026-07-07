@@ -6,14 +6,19 @@
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     transition: bottom 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: flex-end;
+    gap: 20px;
     pointer-events: none; 
 }
 
-
 .goose-companion-container.goose-active {
     bottom: 0px;
+}
+
+.goose-speech-bubble,
+.goose-reply-controls {
+    pointer-events: auto;
 }
 
 .goose-speech-bubble {
@@ -21,13 +26,15 @@
     border: 3px solid #000000;
     border-radius: 15px;
     padding: 10px 15px;
-    max-width: 200px;
-    margin-bottom: 10px;
+    width: 180px;
     box-shadow: 4px 4px 0px rgba(0,0,0,0.1);
-    position: relative;
-    opacity: 0;
-    transform: scale(0.8);
-    transition: all 0.3s ease 0.4s;
+    position: absolute;
+    top: -45px;
+    left: -40px;
+    z-index: 10;
+    opacity: 1;
+    transform: none;
+    transition: none;
     font-size: 14px;
     font-weight: bold;
     color: #000000;
@@ -36,31 +43,151 @@
 
 .goose-companion-container.goose-active .goose-speech-bubble {
     opacity: 1;
-    transform: scale(1);
+    transform: none;
 }
 
 .goose-speech-bubble::after {
     content: '';
     position: absolute;
     bottom: -15px;
-    right: 35px;
+    left: 100px;
     border-width: 15px 15px 0 0;
     border-style: solid;
     border-color: #ffffff transparent;
     display: block;
     width: 0;
 }
+
 .goose-speech-bubble::before {
     content: '';
     position: absolute;
     bottom: -19px;
-    right: 33px;
+    left: 98px;
     border-width: 16px 16px 0 0;
     border-style: solid;
     border-color: #000000 transparent;
     display: block;
     width: 0;
     z-index: -1;
+}
+
+.goose-reply-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    opacity: 1;
+    transform: none;
+    transition: none;
+    width: 200px;
+    margin-bottom: 20px;
+}
+
+.goose-companion-container.goose-active .goose-reply-controls {
+    opacity: 1;
+    transform: none;
+}
+
+.goose-reply-controls.is-sent {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.goose-reply-buttons.hidden,
+.goose-custom-reply.hidden {
+    display: none !important;
+}
+
+.goose-reply-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    width: 100%;
+}
+
+.goose-reply-buttons .goose-reply-btn:nth-child(3),
+.goose-reply-buttons .goose-reply-btn:nth-child(4) {
+    grid-column: span 2;
+}
+
+.goose-reply-btn {
+    background: #fff;
+    color: #000;
+    border: 3px solid #000;
+    border-radius: 10px;
+    padding: 6px 10px;
+    font-size: 13px;
+    font-weight: bold;
+    font-family: inherit;
+    cursor: pointer;
+    box-shadow: 3px 3px 0px #000;
+    transition: all 0.1s ease;
+}
+
+.goose-reply-btn:hover {
+    background: rgb(203, 148, 255);
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0px #000;
+}
+
+.goose-reply-btn:active,
+.goose-reply-btn:disabled {
+    transform: translate(3px, 3px);
+    box-shadow: 0px 0px 0px #000;
+}
+
+.goose-reply-btn:disabled {
+    background: #e0e0e0;
+    cursor: not-allowed;
+}
+
+.goose-custom-reply {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+    transition: all 0.2s ease;
+}
+
+.goose-custom-input {
+    width: 100%;
+    box-sizing: border-box;
+    border: 3px solid #000;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    background: #fff;
+}
+
+.goose-custom-input:focus {
+    background: #fffde7;
+}
+
+.goose-custom-send {
+    background: rgb(203, 148, 255);
+    color: #fff;
+    text-shadow: 1px 1px 0px #000;
+    border: 3px solid #000;
+    border-radius: 8px;
+    padding: 6px;
+    font-weight: bold;
+    font-size: 13px;
+    cursor: pointer;
+    box-shadow: 2px 2px 0px #000;
+    transition: all 0.1s ease;
+}
+
+.goose-custom-send:hover {
+    background: rgb(203, 148, 255);
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000;
+}
+
+.goose-custom-send:active {
+    transform: translate(2px, 2px);
+    box-shadow: 0px 0px 0px #000;
 }
 
 .goose-character {
