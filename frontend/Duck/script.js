@@ -8,14 +8,20 @@ const goosePhrases = [
     "CSS — это моя страсть. Видишь, как я хорош?"
 ];
 
-function createGoose(userRole) {
+let gooseInstance = null;
+let gooseHideTimer = null;
+
+function createGoose() {
+    if (gooseInstance || !document.body) {
+        return;
+    }
 
     const container = document.createElement('div');
     container.className = 'goose-companion-container';
 
     const bubble = document.createElement('div');
     bubble.className = 'goose-speech-bubble';
-    bubble.innerText = "...";
+    bubble.innerText = '...';
     container.appendChild(bubble);
 
     const goose = document.createElement('div');
@@ -44,36 +50,52 @@ function createGoose(userRole) {
     const audioUrl = chrome.runtime.getURL('quack.mp3');
     const quackAudio = new Audio(audioUrl);
 
-    function triggerGoose() {
-        const randomPhrase = goosePhrases[Math.floor(Math.random() * goosePhrases.length)];
-        bubble.innerText = randomPhrase;
-
-        container.classList.add('goose-active');
-
-        quackAudio.currentTime = 0;
-        quackAudio.play().catch(err => {
-            console.log("Браузер заблокировал звук. Нужно кликнуть по странице хотя бы раз, чтобы звук активировался.", err);
-        });
-
-        setTimeout(() => {
-            container.classList.remove('goose-active');
-        }, 5000);
-    }
-
-    setTimeout(triggerGoose, 3000);
-    setInterval(triggerGoose, 20000);
+    gooseInstance = { container, bubble, quackAudio };
 }
 
-function checkAuthAndRun() {
-    chrome.storage.local.get(['isLoggedIn', 'userRole'], (data) => {
-        if (data.isLoggedIn) {
-            createGoose(data.userRole);
-        }
+function showGoose(message) {
+    if (!gooseInstance) {
+        createGoose();
+    }
+
+    if (!gooseInstance) {
+        return;
+    }
+
+    const { container, bubble, quackAudio } = gooseInstance;
+    bubble.innerText = message || goosePhrases[Math.floor(Math.random() * goosePhrases.length)];
+    container.classList.add('goose-active');
+
+    quackAudio.currentTime = 0;
+    quackAudio.play().catch(() => {
+        console.log('Звук заблокирован браузером до первого взаимодействия с страницей.');
     });
+
+    if (gooseHideTimer) {
+        clearTimeout(gooseHideTimer);
+    }
+
+    gooseHideTimer = setTimeout(() => {
+        container.classList.remove('goose-active');
+    }, 5000);
+}
+
+function registerDuckTriggers() {
+    window.addEventListener('duck:show', (event) => {
+        showGoose(event.detail?.message || '');
+    });
+
+    if (chrome.runtime?.onMessage) {
+        chrome.runtime.onMessage.addListener((message) => {
+            if (message?.action === 'SHOW_DUCK') {
+                showGoose(message.message || '');
+            }
+        });
+    }
 }
 
 if (document.readyState === 'complete') {
-    checkAuthAndRun();
+    registerDuckTriggers();
 } else {
-    window.addEventListener('load', checkAuthAndRun);
+    window.addEventListener('load', registerDuckTriggers);
 }

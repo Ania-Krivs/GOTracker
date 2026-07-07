@@ -82,7 +82,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (response.status === 201 || response.status === 200) {
                     console.log('Успешно:', response.status === 201 ? 'Создан' : 'Вошел');
-                    localStorage.setItem('ID', data.id); 
+
+                    const adminId = data?.id ?? data?.ID ?? data?.admin_id ?? data?.adminId ?? '';
+                    const normalizedAdminId = adminId && adminId !== 'undefined' && adminId !== 'null'
+                        ? String(adminId)
+                        : '';
+
+                    localStorage.setItem('admin_id', normalizedAdminId);
+                    localStorage.setItem('adminId', normalizedAdminId);
+                    localStorage.setItem('id', normalizedAdminId);
+                    localStorage.setItem('ID', normalizedAdminId);
 
                     const pageUrl = chrome.runtime.getURL('AdminPanel/Admin.html');
                     chrome.tabs.create({ url: pageUrl }, () => {

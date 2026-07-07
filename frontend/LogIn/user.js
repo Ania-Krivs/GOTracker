@@ -177,45 +177,26 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         function showDuck(text) {
-            ensureGooseStyles();
-
-            const container = document.createElement('div');
-            container.className = 'goose-companion-container';
-
-            const bubble = document.createElement('div');
-            bubble.className = 'goose-speech-bubble';
-            bubble.innerText = text || 'Хонк!';
-            container.appendChild(bubble);
-
-            const goose = document.createElement('div');
-            goose.className = 'goose-character';
-
-            const body = document.createElement('div'); body.className = 'goose-body';
-            const neck = document.createElement('div'); neck.className = 'goose-neck';
-            const head = document.createElement('div'); head.className = 'goose-head';
-            const eye = document.createElement('div'); eye.className = 'goose-eye';
-            const beak = document.createElement('div'); beak.className = 'goose-beak';
-
-            head.appendChild(eye);
-            head.appendChild(beak);
-            goose.appendChild(body);
-            goose.appendChild(neck);
-            goose.appendChild(head);
-            container.appendChild(goose);
-
-            document.body.appendChild(container);
+            const message = text || 'Хонк!';
+            const payload = { action: 'SHOW_DUCK', message };
 
             try {
-                const audio = new Audio('/quack.mp3');
-                audio.currentTime = 0;
-                audio.play().catch(() => {});
-            } catch (e) {
-            }
+                chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+                    const tab = tabs && tabs[0];
+                    if (tab && tab.id !== undefined) {
+                        chrome.tabs.sendMessage(tab.id, payload, () => {
+                            if (chrome.runtime.lastError) {
+                                console.warn('Не удалось отправить сообщение в страницу сайта:', chrome.runtime.lastError.message);
+                                chrome.runtime.sendMessage(payload);
+                            }
+                        });
+                        return;
+                    }
 
-            setTimeout(() => container.classList.add('goose-active'), 50);
-            setTimeout(() => {
-                container.classList.remove('goose-active');
-                setTimeout(() => container.remove(), 600);
-            }, 5500);
+                    chrome.runtime.sendMessage(payload);
+                });
+            } catch (err) {
+                console.warn('Ошибка отправки сообщения утке:', err);
+            }
         }
 });

@@ -11,10 +11,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const getStoredAdminId = () => {
         const stored = localStorage.getItem('admin_id')
+            || localStorage.getItem('adminId')
             || localStorage.getItem('id')
-            || localStorage.getItem('ID')
-            || localStorage.getItem('adminId');
-        return stored ? String(stored) : "";
+            || localStorage.getItem('ID');
+
+        if (!stored || stored === 'undefined' || stored === 'null') {
+            return "";
+        }
+
+        return String(stored);
     };
 
     const currentAdminId = getStoredAdminId();
