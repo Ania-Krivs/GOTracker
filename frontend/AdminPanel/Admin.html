@@ -3,17 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin</title>
+    <title>Admin Dashboard</title>
     <link rel="stylesheet" href="Admin.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <p id="Admin_txt">  admin panel </p>
-    <div class="Error_allerts">
+    <div class="dashboard-layout">
+        <header class="app-header">
+            <h1 id="Admin_txt">Duck Tracker <span>Admin Panel</span></h1>
+        </header>
+
+        <main class="main-content">
+            <div class="container">
+                <div class="panel-header">
+                    <h2>Мои Участники</h2>
+                    <button id="Add">Добавить Участника</button>
+                </div>
+
+                <div id="error-message" class="error-text hidden"></div>
+
+                <div id="Elements-list" class="users-grid">
+                    <div class="loading-state">Загрузка списка пользователей...</div>
+                </div>
+            </div>
+        </main>
     </div>
-    <div class="container"> 
-        <div id="Elements-list"></div>
-        <button id="Add"> Добавить Участника </button>
+
+    <div id="modal-overlay" class="modal-overlay hidden">
+        <div id="Error_window" class="modal-box">
+            <h3 id="modal-title">Новый участник</h3>
+            <div id="modal-body-content"></div>
+        </div>
     </div>
+
     <script src="Admin.js"></script>
 </body>
 </html>

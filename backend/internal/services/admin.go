@@ -38,6 +38,10 @@ func (s *adminService) CreateAdmin(ctx context.Context, input schemas.CreateAdmi
         return existingAdmin, false, nil 
     }
 
+    if input.Name == "" {
+        return nil, false, errors.New("пользователь с таким email не найден")
+    }
+
     hashedBytes, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
     if err != nil {
         return nil, false, err

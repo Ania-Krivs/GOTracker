@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await response.json();
 
                 if (!response.ok) {
-                    throw new Error(data || 'Что-то пошло не так');
+                    throw new Error(data.Error || 'Что-то пошло не так');
                 }
 
                 if (response.status === 201 || response.status === 200) {
