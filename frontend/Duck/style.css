@@ -159,6 +159,7 @@
     font-family: inherit;
     outline: none;
     background: #fff;
+    color: #000;
 }
 
 .goose-custom-input:focus {
