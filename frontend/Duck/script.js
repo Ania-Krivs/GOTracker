@@ -137,7 +137,6 @@ function extractDuckMessage(payload) {
                     if (nested) return nested;
                 }
             } catch (_) {
-                // Если это не JSON, показываем как есть
             }
 
             return trimmed;
@@ -187,10 +186,9 @@ function showGoose(message) {
     if (gooseHideTimer) clearTimeout(gooseHideTimer);
     gooseHideTimer = setTimeout(() => {
         container.classList.remove('goose-active');
-    }, 12000); // Утка видна 12 секунд, ожидая клика
+    }, 1200000); 
 }
 
-// Регистрируем единственный слушатель событий от background.js
 if (chrome.runtime?.onMessage) {
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         if (message && message.action === 'SHOW_DUCK') {

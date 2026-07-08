@@ -301,6 +301,42 @@ body {
     margin: 14px 0;
 }
 
+.response-modal {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.response-block {
+    background: rgb(203, 148, 255);
+    border: 1px solid #3d3163;
+    border-radius: 10px;
+    padding: 16px;
+}
+
+.response-label {
+    color: #9a8fcc;
+    font-size: 13px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.response-text {
+    color: #f1f0ff;
+    font-size: 15px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+.response-text.admin-message {
+    color: rgb(203, 148, 255);
+}
+
+.response-text.user-reply {
+    color: #ffffff;
+}
+
 .error-text {
     color: #ff4d4d;
     font-size: 13px;
@@ -316,7 +352,6 @@ body {
     display: none !important;
 }
 
-/* Стили тостов уведомлений вебсокета */
 .toast-container {
     position: fixed;
     bottom: 24px;
@@ -339,6 +374,68 @@ body {
     max-width: 400px;
     font-size: 14px;
     animation: slideIn 0.3s ease forwards;
+}
+
+.response-toast {
+    border-left-color: rgb(203, 148, 255);
+    min-width: 320px;
+    max-width: 460px;
+}
+
+.toast-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.toast-header strong {
+    font-size: 14px;
+    color: #f7f6ff;
+}
+
+.toast-close {
+    width: 28px;
+    height: 28px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: transparent;
+    color: #fff;
+    border-radius: 50%;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.toast-close:hover {
+    background: rgba(255,255,255,0.08);
+}
+
+.toast-section {
+    margin-top: 10px;
+}
+
+.toast-section-label {
+    font-size: 12px;
+    color: #a89fe3;
+    margin-bottom: 6px;
+}
+
+.toast-section-text {
+    font-size: 14px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+.toast-section-text.admin-message {
+    color: #d3c8ff;
+}
+
+.toast-section-text.user-reply {
+    color: #ffffff;
 }
 
 @keyframes slideIn {

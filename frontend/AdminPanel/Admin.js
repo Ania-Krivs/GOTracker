@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const currentAdminId = getStoredAdminId();
+    const lastAdminMessageByUserId = new Map();
 
     // ПОДКЛЮЧЕНИЕ К WEBSOCKET ДЛЯ АДМИНИСТРАТОРА
     const initAdminWebSocket = () => {
@@ -39,11 +40,12 @@ document.addEventListener('DOMContentLoaded', () => {
         adminSocket.onmessage = (event) => {
             try {
                 const data = JSON.parse(event.data);
-                // Предполагается структура ответа пользователя: { user_name: "...", message: "..." }
-                const senderName = data.user_name || "Участник";
-                const text = data.message || "Отправил ответ";
-                
-                showNotificationToast(senderName, text);
+                const userId = data.user_id || data.userId || data.id || '';
+                const senderName = data.user_name || data.name || "Участник";
+                const userReply = data.message || data.text || data.payload || "Отправил ответ";
+                const adminMessage = userId ? (lastAdminMessageByUserId.get(String(userId)) || 'Сообщение администратора не найдено') : 'Сообщение администратора не найдено';
+
+                showResponseToast({ userId, userName: senderName, adminMessage, userReply });
             } catch (err) {
                 console.warn("Получены нетекстовые или некорректные данные по WS:", event.data);
             }
@@ -69,6 +71,41 @@ document.addEventListener('DOMContentLoaded', () => {
             toast.style.animation = "slideIn 0.3s ease reverse forwards";
             setTimeout(() => toast.remove(), 300);
         }, 6000);
+    };
+
+    const showResponseToast = ({ userId, userName, adminMessage, userReply }) => {
+        const toast = document.createElement("div");
+        toast.className = "toast response-toast";
+        toast.innerHTML = `
+            <div class="toast-header">
+                <strong>Ответ от ${escapeHtml(userName)}</strong>
+                <button type="button" class="toast-close" aria-label="Закрыть">×</button>
+            </div>
+            <div class="toast-section">
+                <div class="toast-section-label">Первоначальное сообщение</div>
+                <div class="toast-section-text admin-message">${escapeHtml(adminMessage)}</div>
+            </div>
+            <div class="toast-section">
+                <div class="toast-section-label">Ответ</div>
+                <div class="toast-section-text user-reply">${escapeHtml(userReply)}</div>
+            </div>
+        `;
+
+        const closeBtn = toast.querySelector('.toast-close');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => toast.remove());
+        }
+
+        toastContainer.appendChild(toast);
+    };
+
+    const escapeHtml = (text) => {
+        return String(text)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
     };
 
     const normalizeUser = (user) => {
@@ -245,6 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     throw new Error(data?.error || 'Не удалось отправить сообщение');
                 }
 
+                lastAdminMessageByUserId.set(String(userId), messageText);
                 closeModal();
             } catch (err) {
                 if (modalError) {
