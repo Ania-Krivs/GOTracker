@@ -122,12 +122,60 @@ function buildReplyControls() {
     controls.appendChild(customReplyRow);
 }
 
+function extractDuckMessage(payload) {
+    const readFromValue = (value) => {
+        if (!value) return null;
+
+        if (typeof value === 'string') {
+            const trimmed = value.trim();
+            if (!trimmed) return null;
+
+            try {
+                const parsed = JSON.parse(trimmed);
+                if (parsed && typeof parsed === 'object') {
+                    const nested = readFromValue(parsed);
+                    if (nested) return nested;
+                }
+            } catch (_) {
+                // Если это не JSON, показываем как есть
+            }
+
+            return trimmed;
+        }
+
+        if (typeof value === 'object') {
+            if (typeof value.message === 'string' && value.message.trim()) {
+                return value.message;
+            }
+            if (typeof value.text === 'string' && value.text.trim()) {
+                return value.text;
+            }
+            if (typeof value.payload === 'string' && value.payload.trim()) {
+                return value.payload;
+            }
+        }
+
+        return null;
+    };
+
+    const extracted = readFromValue(payload);
+    if (extracted) {
+        if (typeof extracted === 'string') {
+            const nested = readFromValue(extracted);
+            return nested || extracted;
+        }
+        return String(extracted);
+    }
+
+    return 'Хонк!';
+}
+
 function showGoose(message) {
     if (!gooseInstance) createGoose();
     if (!gooseInstance) return;
 
     const { container, bubble, quackAudio } = gooseInstance;
-    bubble.textContent = message || 'Хонк!';
+    bubble.textContent = extractDuckMessage(message);
     buildReplyControls();
     container.classList.add('goose-active');
 
@@ -146,7 +194,7 @@ function showGoose(message) {
 if (chrome.runtime?.onMessage) {
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         if (message && message.action === 'SHOW_DUCK') {
-            showGoose(message.message);
+            showGoose(message);
             sendResponse({ ok: true });
             return true;
         }
