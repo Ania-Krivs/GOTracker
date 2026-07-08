@@ -25,11 +25,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const currentAdminId = getStoredAdminId();
     const lastAdminMessageByUserId = new Map();
 
-    // ПОДКЛЮЧЕНИЕ К WEBSOCKET ДЛЯ АДМИНИСТРАТОРА
     const initAdminWebSocket = () => {
         if (!currentAdminId) return;
 
-        // Формируем адрес ws-соединения (подставьте ваш точный эндпоинт, если он отличается)
         const wsUrl = `ws://localhost:8080/ws/admin?admin_id=${currentAdminId}`;
         adminSocket = new WebSocket(wsUrl);
 
@@ -211,7 +209,6 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => document.getElementById('new-user-name-input')?.focus(), 40);
     });
 
-    // ОБРАБОТЧИК ДЛЯ КНОПКИ «ОТПРАВИТЬ СООБЩЕНИЕ» В СПИСКЕ
     elementsList.addEventListener('click', (e) => {
         if (e.target && e.target.classList.contains('msg-btn')) {
             const userId = e.target.dataset.userId;
@@ -249,7 +246,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // ОТПРАВКА СООБЩЕНИЯ НА БЭКЕНД С ВАЛИДАЦИЕЙ СИМВОЛОВ
     modalOverlay.addEventListener('click', async (e) => {
         if (e.target && e.target.id === 'Send_msg_btn') {
             const userId = e.target.dataset.userId;
@@ -279,7 +275,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const data = await response.json().catch(() => null);
                 if (!response.ok) {
-                    throw new Error(data?.error || 'Не удалось отправить сообщение');
+                    const errorMessage = data?.error || 'Не удалось отправить сообщение';
+                    throw new Error(errorMessage);
                 }
 
                 lastAdminMessageByUserId.set(String(userId), messageText);
@@ -385,7 +382,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Запуск процессов
     fetchUsers();
     initAdminWebSocket();
 });

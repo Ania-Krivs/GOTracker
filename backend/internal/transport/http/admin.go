@@ -3,19 +3,20 @@ package http
 import (
 	"encoding/json"
 	"net/http"
+
 	"github.com/Ania-Krivs/GOTracker/internal/schemas"
 	"github.com/Ania-Krivs/GOTracker/internal/services"
 )
 
 type AdminHandler struct {
 	adminService services.AdminService
-	hub *services.ClientHub
+	hub          *services.ClientHub
 }
 
 func NewAdminHandler(adminService services.AdminService, hub *services.ClientHub) *AdminHandler {
 	return &AdminHandler{
 		adminService: adminService,
-		hub: hub,
+		hub:          hub,
 	}
 }
 
@@ -45,29 +46,29 @@ func (h *AdminHandler) CreateAdminDispatch(w http.ResponseWriter, r *http.Reques
 // @Failure      500  {object}  string "Внутренняя ошибка сервера"
 // @Router       /admin [post]
 func (h *AdminHandler) CreateAdmin(w http.ResponseWriter, r *http.Request) {
-    w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 
-    var input schemas.CreateAdminInput
-    if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-        w.WriteHeader(http.StatusBadRequest)
-        _ = json.NewEncoder(w).Encode("Неверный формат JSON")
-        return
-    }
+	var input schemas.CreateAdminInput
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode("Неверный формат JSON")
+		return
+	}
 
 	admin, isNew, err := h.adminService.CreateAdmin(r.Context(), input)
-    if err != nil {
-        w.WriteHeader(http.StatusBadRequest)
-        _ = json.NewEncoder(w).Encode(err.Error())
-        return
-    }
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(err.Error())
+		return
+	}
 
-    if isNew {
-        w.WriteHeader(http.StatusCreated) 
-    } else {
-        w.WriteHeader(http.StatusOK)
-    }
+	if isNew {
+		w.WriteHeader(http.StatusCreated)
+	} else {
+		w.WriteHeader(http.StatusOK)
+	}
 
-    _ = json.NewEncoder(w).Encode(admin)
+	_ = json.NewEncoder(w).Encode(admin)
 }
 
 // TriggerDuck godoc
@@ -89,7 +90,7 @@ func (h *AdminHandler) TriggerDuck(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 
-    var req struct {
+	var req struct {
 		AdminID string `json:"admin_id" validate:"required"`
 		UserID  string `json:"user_id" validate:"required"`
 		Message string `json:"message" validate:"required"`
@@ -119,7 +120,13 @@ func (h *AdminHandler) TriggerDuck(w http.ResponseWriter, r *http.Request) {
 		"action":  "SHOW_DUCK",
 		"message": req.Message,
 	}
-	
-	h.hub.SendToUser(req.UserID, notification)
+
+	if !h.hub.SendToUser(req.UserID, notification) {
+		w.WriteHeader(http.StatusConflict)
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": "Пользователь не в сети"})
+		return
+	}
+
 	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(map[string]string{"message": "Уведомление успешно отправлено"})
 }
