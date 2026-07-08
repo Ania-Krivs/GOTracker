@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tabLogin.classList.add('active');
             tabRegister.classList.remove('active');
             slider.style.transform = 'translateX(0)';
-            titleA.textContent = 'Вход';
+            
             fieldName.classList.add('hidden');
             submitBtn.textContent = 'Продолжить';
             clearError();
@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tabRegister.classList.add('active');
             tabLogin.classList.remove('active');
             slider.style.transform = 'translateX(100%)';
-            titleA.textContent = 'Регистрация';
+            
             fieldName.classList.remove('hidden');
             submitBtn.textContent = 'Продолжить';
             clearError();
