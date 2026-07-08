@@ -20,7 +20,6 @@ document.addEventListener("DOMContentLoaded", () => {
     let popupGooseTimer = null;
     
 
-    // Создаем визуальную структуру утки в иерархии DOM попапа
     function createPopupGoose() {
         if (document.querySelector('.goose-companion-container')) return;
 
@@ -55,11 +54,9 @@ document.addEventListener("DOMContentLoaded", () => {
         goose.appendChild(head);
         container.appendChild(goose);
 
-        // Аккуратно сажаем утку прямо над блоком чата
         chatBox.parentNode.insertBefore(container, chatBox);
     }
 
-    // 1. Проверяем сохраненную сессию пользователя
     chrome.storage.local.get(['userId'], (data) => {
         const storedId = data.userId;
         if (storedId && storedId !== "undefined" && storedId !== "null" && storedId !== "") {
@@ -83,18 +80,17 @@ document.addEventListener("DOMContentLoaded", () => {
         charCounter.textContent = `${replyInput.value.length} / 150`;
     });
 
-    // 2. Обработка процесса авторизации
     loginBtn.onclick = async () => {
         errorBlock.classList.add("hidden");
         const codeStr = codeInput.value.trim();
-        if (!codeStr) return showError("Please enter a code");
+        if (!codeStr) return showError("Пожалуйста, введите код");
         
         const codeNum = Number(codeStr);
-        if (isNaN(codeNum)) return showError("Code must be a valid number");
+        if (isNaN(codeNum)) return showError("Код должен быть числом");
 
         try {
             loginBtn.disabled = true;
-            loginBtn.textContent = "Connecting...";
+            loginBtn.textContent = "Подключение...";
 
             const response = await fetch("http://localhost:8080/users/login", {
                 method: "POST",
@@ -103,10 +99,10 @@ document.addEventListener("DOMContentLoaded", () => {
             });
 
             const data = await response.json();
-            if (!response.ok) throw new Error(data.error || "Login failed");
+            if (!response.ok) throw new Error(data.error || "Не удалось войти");
 
             const userId = data.id || data.ID || data.uid;
-            if (!userId) throw new Error("User ID not found in server response");
+            if (!userId) throw new Error("Пользователь не найден");
 
             chrome.storage.local.set({ userId: String(userId) }, () => {
                 isUserAuthenticated = true;
@@ -118,13 +114,20 @@ document.addEventListener("DOMContentLoaded", () => {
                 chrome.runtime.sendMessage({ action: "CONNECT_USER_WS", userId: String(userId) });
             });
         } catch (err) {
-            showError(err.message);
-            loginBtn.disabled = false;
-            loginBtn.textContent = "Continue";
-        }
+
+    let message = err.message;
+
+    if (message === "Failed to fetch") {
+        message = "Не удалось подключиться";
+    }
+
+    showError(message);
+
+    loginBtn.disabled = false;
+    loginBtn.textContent = "Продолжить";
+}
     };
 
-    // 3. Прием внутренних системных уведомлений от background.js
     chrome.runtime.onMessage.addListener((message) => {
         if (!isUserAuthenticated) return;
 
@@ -133,9 +136,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         
         if (message.action === "DISPLAY_INCOMING_MSG") {
-            // Отображаем сообщение в попапе (текст + утка)
             // displayIncomingMessage(message.text);
-            // Форсированно будим уток на всех открытых вкладках браузера
             showDuckOnTabs(message.text);
         }
     });
@@ -154,7 +155,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // Вывод входящего сообщения и анимация утки внутри попапа
     function displayIncomingMessage(text) {
         chatBox.className = "chat-placeholder incoming-msg";
         chatBox.innerHTML = `<strong>Администратор:</strong><br>${text}`;
@@ -177,7 +177,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // Твоя продвинутая функция доставки из второго файла с автоматическим инжектом скриптов
     function showDuck(text) {
         const message = text || 'Хонк!';
         const payload = { action: 'SHOW_DUCK', message };
@@ -185,7 +184,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const deliverToTab = (tabId) => {
             chrome.tabs.sendMessage(tabId, payload, () => {
                 const error = chrome.runtime.lastError;
-                // Если контент-скрипт еще не внедрен на вкладку, внедряем файлы вручную
                 if (error) {
                     chrome.scripting.insertCSS({
                         target: { tabId },
@@ -216,12 +214,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // Алиас для вызова рассылки по вкладкам
     function showDuckOnTabs(text) {
         showDuck(text);
     }
 
-    // 4. Безопасная отправка ответа админу через фоновый скрипт
     sendReplyBtn.onclick = () => {
         const replyText = replyInput.value.trim();
         if (!replyText) return;
@@ -235,7 +231,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 chatBox.style.borderColor = "#2ee67e";
                 chatBox.textContent = "✓ Ответ отправлен администратору!";
 
-                // Прячем утку в попапе, так как мы ответили
                 const container = document.querySelector('.goose-companion-container');
                 if (container) container.classList.remove('goose-active');
 

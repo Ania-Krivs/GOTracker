@@ -1,7 +1,6 @@
 let socket = null;
 let currentUserId = null;
 
-// Попытка восстановить сокет при старте браузера/воркера, если ID уже сохранен
 chrome.storage.local.get(['userId'], (data) => {
     if (data.userId && data.userId !== "undefined" && data.userId !== "null") {
         currentUserId = String(data.userId);
@@ -9,22 +8,18 @@ chrome.storage.local.get(['userId'], (data) => {
     }
 });
 
-// Единый диспетчер сообщений внутри расширения
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    // 1. Команда на подключение после POST /users/login
     if (request.action === "CONNECT_USER_WS") {
         currentUserId = String(request.userId);
         connectWebSocket(currentUserId);
         sendResponse({ success: true, status: "connecting" });
     }
     
-    // 2. Команда на отправку ответа админу (приходит как из попапа, так и от утки с сайта)
     if (request.action === "SEND_REPLY_TO_ADMIN") {
         const success = sendReplyToAdmin(request.text);
         sendResponse({ success: success });
     }
 
-    // 3. Запрос текущего статуса сокета (для UI попапа)
     if (request.action === "GET_WS_STATUS") {
         let statusText = "Отключено";
         if (socket) {
@@ -36,7 +31,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
 });
 
-// Функция создания ЕДИНСТВЕННОГО WebSocket-соединения
 function connectWebSocket(id) {
     if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) {
         console.log("=== BACKGROUND === Соединение уже активно или в процессе сборки.");
@@ -54,7 +48,6 @@ function connectWebSocket(id) {
 
     socket.onmessage = (event) => {
         console.log("=== BACKGROUND === Получено сообщение от админа:", event.data);
-        // Пересылаем текст админа во все инстанции
         broadcastMessageToExtension(event.data);
     };
 
@@ -72,10 +65,9 @@ function connectWebSocket(id) {
     };
 }
 
-// Отправка ответа в сокет
 function sendReplyToAdmin(text) {
     if (socket && socket.readyState === WebSocket.OPEN) {
-        socket.send(text); // Отправляем чистую строку, как ожидает Go-бэкенд
+        socket.send(text); 
         console.log("=== BACKGROUND === Ответ отправлен в WebSocket:", text);
         return true;
     }
@@ -83,22 +75,16 @@ function sendReplyToAdmin(text) {
     return false;
 }
 
-// Рассылка входящего сообщения админа на открытые вкладки (уткам) и в попап
 function broadcastMessageToExtension(text) {
-    // 1. Отправляем в user.js (попап), если он открыт в этот момент
     chrome.runtime.sendMessage({ action: "DISPLAY_INCOMING_MSG", text: text }).catch(() => {
-        // Попап закрыт — это нормально, игнорируем ошибку
     });
 
-    // 2. Отправляем в Duck/script.js (на веб-страницы)
     chrome.tabs.query({}, (tabs) => {
         if (!tabs) return;
         
         tabs.forEach((tab) => {
-            // Проверяем, что у вкладки есть ID и это обычная веб-страница (не системная chrome://)
             if (tab && tab.id !== undefined && tab.url && tab.url.startsWith('http')) {
                 
-                // Проверяем, загрузилась ли страница полностью, чтобы контент-скрипт точно работал
                 if (tab.status === 'complete') {
                     chrome.tabs.sendMessage(tab.id, { action: "SHOW_DUCK", message: text })
                         .then(() => {
